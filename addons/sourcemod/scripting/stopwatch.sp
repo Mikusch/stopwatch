@@ -72,56 +72,6 @@ public void OnConfigsExecuted()
 	}
 }
 
-public void TogglePlugin(bool bEnable)
-{
-	g_bEnabled = bEnable;
-	
-	if (bEnable)
-	{
-		mp_tournament.Flags &= ~(FCVAR_REPLICATED | FCVAR_NOTIFY);
-		
-		g_detour_CTFGameRules_ManageStopwatchTimer.Enable(Hook_Pre, CTFGameRules_ManageStopwatchTimer_Pre);
-		g_detour_CTFGameRules_ManageStopwatchTimer.Enable(Hook_Post, CTFGameRules_ManageStopwatchTimer_Post);
-		
-		for (int client = 1; client <= MaxClients; client++)
-		{
-			if (!IsClientInGame(client))
-				continue;
-			
-			OnClientPutInServer(client);
-		}
-		
-		int entity = -1;
-		while ((entity = FindEntityByClassname(entity, "*")) != -1)
-		{
-			if (entity <= MaxClients)
-				continue;
-			
-			char classname[256];
-			if (!GetEntityClassname(entity, classname, sizeof(classname)))
-				continue;
-			
-			OnEntityCreated(entity, classname);
-		}
-		
-		OnMapStart();
-	}
-	else
-	{
-		mp_tournament.Flags |= (FCVAR_REPLICATED | FCVAR_NOTIFY);
-		ReplicateTournamentMode(mp_tournament.BoolValue);
-		
-		g_detour_CTFGameRules_ManageStopwatchTimer.Disable(Hook_Pre, CTFGameRules_ManageStopwatchTimer_Pre);
-		g_detour_CTFGameRules_ManageStopwatchTimer.Disable(Hook_Post, CTFGameRules_ManageStopwatchTimer_Post);
-		
-		for (int i = g_dynamicHookIds.Length - 1; i >= 0; i--)
-		{
-			int hookid = g_dynamicHookIds.Get(i);
-			DynamicHook.RemoveHook(hookid);
-		}
-	}
-}
-
 public void OnMapStart()
 {
 	if (!g_bEnabled)
@@ -169,6 +119,56 @@ public void TF2_OnWaitingForPlayersEnd()
 		return;
 	
 	ReplicateTournamentMode(true);
+}
+
+void TogglePlugin(bool bEnable)
+{
+	g_bEnabled = bEnable;
+	
+	if (bEnable)
+	{
+		mp_tournament.Flags &= ~(FCVAR_REPLICATED | FCVAR_NOTIFY);
+		
+		g_detour_CTFGameRules_ManageStopwatchTimer.Enable(Hook_Pre, CTFGameRules_ManageStopwatchTimer_Pre);
+		g_detour_CTFGameRules_ManageStopwatchTimer.Enable(Hook_Post, CTFGameRules_ManageStopwatchTimer_Post);
+		
+		for (int client = 1; client <= MaxClients; client++)
+		{
+			if (!IsClientInGame(client))
+				continue;
+			
+			OnClientPutInServer(client);
+		}
+		
+		int entity = -1;
+		while ((entity = FindEntityByClassname(entity, "*")) != -1)
+		{
+			if (entity <= MaxClients)
+				continue;
+			
+			char classname[256];
+			if (!GetEntityClassname(entity, classname, sizeof(classname)))
+				continue;
+			
+			OnEntityCreated(entity, classname);
+		}
+		
+		OnMapStart();
+	}
+	else
+	{
+		mp_tournament.Flags |= (FCVAR_REPLICATED | FCVAR_NOTIFY);
+		ReplicateTournamentMode(mp_tournament.BoolValue);
+		
+		g_detour_CTFGameRules_ManageStopwatchTimer.Disable(Hook_Pre, CTFGameRules_ManageStopwatchTimer_Pre);
+		g_detour_CTFGameRules_ManageStopwatchTimer.Disable(Hook_Post, CTFGameRules_ManageStopwatchTimer_Post);
+		
+		for (int i = g_dynamicHookIds.Length - 1; i >= 0; i--)
+		{
+			int hookid = g_dynamicHookIds.Get(i);
+			DynamicHook.RemoveHook(hookid);
+		}
+	}
 }
 
 DynamicDetour CreateDynamicDetour(GameData gameconf, const char[] name)
