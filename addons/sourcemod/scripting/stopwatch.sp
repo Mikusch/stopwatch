@@ -24,6 +24,8 @@
 bool g_bEnabled;
 ArrayList g_dynamicHookIds;
 ConVar mp_tournament;
+ConVar mp_tournament_stopwatch;
+ConVar tf_attack_defend_map;
 
 DynamicDetour g_detour_CTFGameRules_ManageStopwatchTimer;
 DynamicHook g_hook_CTeamRoundTimer_SetTimeRemaining;
@@ -45,6 +47,8 @@ public void OnPluginStart()
 	
 	mp_tournament = FindConVar("mp_tournament");
 	mp_tournament.AddChangeHook(OnTournamentModeChanged);
+	mp_tournament_stopwatch = FindConVar("mp_tournament_stopwatch");
+	tf_attack_defend_map = FindConVar("tf_attack_defend_map");
 	
 	GameData gameconf = new GameData("stopwatch");
 	if (!gameconf)
@@ -79,6 +83,15 @@ public void OnMapStart()
 	
 	g_dynamicHookIds.Push(g_hook_CTeamplayRoundBasedRules_StopWatchModeThink.HookGamerules(Hook_Pre, CTeamplayRoundBasedRules_StopWatchModeThink_Pre, DHookRemovalCB_OnHookRemoved));
 	g_dynamicHookIds.Push(g_hook_CTeamplayRoundBasedRules_StopWatchModeThink.HookGamerules(Hook_Post, CTeamplayRoundBasedRules_StopWatchModeThink_Post, DHookRemovalCB_OnHookRemoved));
+	
+	// Calculates the value of tf_attack_defend_map
+	SetVariantString("IsAttackDefenseMode()");
+	AcceptEntityInput(0, "RunScriptCode");
+	
+	bool bUseStopWatch = tf_attack_defend_map.BoolValue;
+	
+	GameRules_SetProp("m_bStopWatch", bUseStopWatch);
+	mp_tournament_stopwatch.BoolValue = bUseStopWatch;
 }
 
 public void OnEntityCreated(int entity, const char[] classname)
