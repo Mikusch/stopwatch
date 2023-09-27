@@ -21,6 +21,8 @@
 #include <sdktools>
 #include <dhooks>
 
+#define PLUGIN_VERSION "1.0.0"
+
 bool g_bEnabled;
 ArrayList g_dynamicHookIds;
 ConVar mp_tournament;
