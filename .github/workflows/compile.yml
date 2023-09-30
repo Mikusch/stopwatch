@@ -51,12 +51,15 @@ jobs:
           chmod +x sourcemod_dist/addons/sourcemod/scripting/spcomp
           mkdir -p addons/sourcemod/plugins
           ./sourcemod_dist/addons/sourcemod/scripting/spcomp -E addons/sourcemod/scripting/${{ env.PLUGIN_NAME }}.sp -o addons/sourcemod/plugins/${{ env.PLUGIN_NAME }}.smx
-          mkdir artifact
-          mv addons artifact/
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.PLUGIN_NAME }}-${{ env.PLUGIN_VERSION }}
-          path: |
-            artifact/**
+      - name: Create release archive
+        run: |
+          zip -r ${{ env.PLUGIN_NAME }}-${{ env.PLUGIN_VERSION }}.zip addons/
+
+      - name: Create GitHub release
+        run: |
+          gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
+          gh config set git_protocol ssh
+          if ! gh release view ${{ env.PLUGIN_VERSION }} --repo ${{ github.repository }} > /dev/null 2>&1; then
+            gh release create ${{ env.PLUGIN_VERSION }} ./${{ env.PLUGIN_NAME }}-${{ env.PLUGIN_VERSION }}.zip -t "${{ env.PLUGIN_VERSION }}" --repo ${{ github.repository }}
+          fi
